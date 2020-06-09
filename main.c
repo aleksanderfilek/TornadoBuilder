@@ -3,17 +3,21 @@
 #include<stdarg.h>
 
 #include<string.h>
-#include<unistd.h>
 #include<dirent.h>
 
 #include<sys/types.h>
-#include<sys/wait.h>
 
+#ifdef WINDOWS
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include<unistd.h>
 #define GetCurrentDir getcwd
+#endif
 
 #define buffer_size 512
 
-static int execute_command(const char* filename, int argc, ...);
+static int execute_command(const char* str, ...);
 static int get_files(const char* path, const char* type, char ***files, int *size);
 
 int main(int argc, char *argv[]){
@@ -32,96 +36,97 @@ int main(int argc, char *argv[]){
             return 0;
         }
 
-        char buffer[buffer_size];
+        execute_command("mkdir -p %s/build/debug", argv[2]);
 
-        sprintf(buffer, "%s/build/debug", argv[2]);
-        execute_command("/bin/mkdir", 3, "mkdir", "-p", buffer);
+        execute_command("mkdir -p %s/build/release", argv[2]);
 
-        sprintf(buffer, "%s/build/release", argv[2]);
-        execute_command("/bin/mkdir", 3, "mkdir", "-p", buffer);
+        execute_command("mkdir -p %s/project/resources", argv[2]);
 
-        sprintf(buffer, "%s/project/resources", argv[2]);
-        execute_command("/bin/mkdir", 3, "mkdir", "-p", buffer);
+        execute_command("mkdir -p %s/project/include", argv[2]);
 
-        sprintf(buffer, "%s/project/include", argv[2]);
-        execute_command("/bin/mkdir", 3, "mkdir", "-p", buffer);
+        execute_command("mkdir -p %s/project/source", argv[2]);
 
-        sprintf(buffer, "%s/project/source", argv[2]);
-        execute_command("/bin/mkdir", 3, "mkdir", "-p", buffer);
+        execute_command("cp -r %s/TE %s/", path, argv[2]);
 
-        sprintf(buffer, "%s/TE", path);
-        char second_buffer[buffer_size];
-        sprintf(second_buffer, "%s/", argv[2]);
-        execute_command("/bin/cp", 4, "cp", "-r", buffer, second_buffer);
-
-        sprintf(buffer, "%s/main.cpp", path);
-        second_buffer[buffer_size];
-        sprintf(second_buffer, "./%s/project/source/", argv[2]);
-        execute_command("/bin/cp", 4, "cp", "-r", buffer, second_buffer);
+        execute_command("cp %s/main.cpp %s/project/source", path, argv[2]);
     }
     else if(strcmp("build", argv[1]) == 0){
+        float percent = 0;
+
         int size;
         char **files;
-        get_files("./project/source", ".cpp", &files, &size);
+        get_files("./project/source", ".cpp", &files, &size);        
 
         int i;
         for(i = 0; i < size; i++){
-            if(argc == 3 && ( strcmp("--release", argv[2]) == 0 ||  strcmp("-r", argv[2]) == 0 )){
-                execute_command("/usr/bin/g++", 14, "g++", "-o3", "-I/project/include","-ITE/include", 
-                                "-LTE/lib", "project/source/main.cpp", "TE/lib/libTE.a", 
-                                "-lSDL2main", "-lSDL2", "-lGLEW", "-lGLU", "-lGL", "-lSOIL", 
-                                "-o", "build/debug/game");
+            if(argc == 3 && ( strcmp("--release", argv[2]) == 0 
+                            ||  strcmp("-r", argv[2]) == 0 )){
+
             }
             else{
-                execute_command("/usr/bin/g++", 14, "g++","-I/project/include","-ITE/include", 
-                                "-LTE/lib", files[i], "TE/lib/libTE.a", 
-                                "-lSDL2main", "-lSDL2", "-lGLEW", "-lGLU", "-lGL", "-lSOIL", 
-                                "-o", "build/debug/game");
+                execute_command("g++ -c -Iproject/include -ITE/include project/source/%s", files[i]);
+                size_t shift = strcspn(files[i], "cpp");
+                memset(files[i] + shift, 0, 3);
+                *(files[i] + shift) = 'o';
             }
         }
+        
+        char buffer[buffer_size] = {0};
+        for(i = 0; i < size; i++){
+            strcat(buffer, " ");
+            strcat(buffer, files[i]);
+        }
+        execute_command("g++ -Iproject/include -ITE/include -LTE/lib %s TE/lib/libTE.a -lSDL2main -lSDL2 -lGLEW -lGLU -lGL -lSOIL", buffer);
 
+        for(i = 0; i < size; i++){
+            execute_command("rm %s", files[i]);
+        }
+
+        for(i = 0; i < size; i++)
+            free(files[i]);
         free(files);
     }
     else if(strcmp("run", argv[1]) == 0){
         if(argc == 3 && ( strcmp("--release", argv[2]) == 0 ||  strcmp("-r", argv[2]) == 0 )){
-            execute_command("./build/release/game", 0);
+            //execute_command("./build/release/game", 0);
         }
         else{
-            execute_command("./build/debug/game", 0);
+            execute_command("./build/debug/game");
         }
     }
 
     return 0;
 }
 
-static int execute_command(const char* filename, int argc, ...){
+static int execute_command(const char* str, ...){
 
     va_list valist;
-    char **argv;
-    int i;
+    char _command[4*buffer_size] = {0};
+    int i = 0, j = 0;
 
-    va_start(valist, argc);
-
-    argv = (char**)malloc((argc + 1) * sizeof(char*));
-    for(i = 0; i < argc; i++){
-        argv[i] = (char*)malloc(buffer_size * sizeof(char));
-        char* buffer = va_arg(valist, char*);
-        sprintf(argv[i], "%s", buffer);
+    va_start(valist, str);
+    while(str && str[i]){
+        if(str[i] == '%'){
+            i++;
+            if(str[i] == 's'){
+                char* string = (char*)va_arg(valist, char*);
+                size_t string_size = strlen(string);
+                int k;
+                for(k = 0; k < string_size; k++){
+                    _command[j] = string[k];
+                    j++;
+                }
+            }
+        }
+        else{
+            _command[j] = str[i];
+            j++;
+        }
+        i++;
     }
-    argv[argc] = NULL;
-
     va_end(valist);
 
-    pid_t pid = fork();
-    if(pid == 0){
-        execv(filename, argv);
-        return -1;
-    }
-    else{
-        waitpid(pid, 0, 0);
-    }
-
-    free(argv);
+    system(_command);
 
     return 0;
 }
@@ -145,7 +150,6 @@ static int get_files(const char* path, const char* type, char ***files, int *siz
             _files = (char**)realloc(_files, _size * sizeof(char*));
             _files[_size - 1] = (char*)malloc(128 * sizeof(char));
 
-            strcat(_files[_size - 1], "./project/source/");
             strcat(_files[_size - 1], sd->d_name);
         }
     } 
