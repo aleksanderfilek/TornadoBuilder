@@ -1,0 +1,20 @@
+mkdir tornadobuilder
+mkdir tornadobuilder/DEBIAN
+nano tornadobuilder/DEBIAN/config
+
+Package: tornadobuilder
+Version: 0.0.1
+Section: custom
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 50000
+Maintainer: abstractsystem.org
+Description: Tornado Game Engine
+
+mkdir -p tornadobuilder/usr/bin
+cp te tornadobuilder/usr/bin/
+cp -r TE/ tornadobuilder/usr/bin/
+cp main.c tornadobuilder/usr/bin/
+
+dpkg-deb --build tornadobuilder
