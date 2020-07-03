@@ -34,9 +34,9 @@ int main(int argc, char *argv[]){
 
         execute_command("mkdir -p %s/project/source", argv[2]);
 
-        execute_command("cp -r /usr/bin/TE %s/",argv[2]);
+        execute_command("cp -r /usr/bin/TE/TE %s/",argv[2]);
 
-        execute_command("cp /usr/bin/main.c %s/project/source", argv[2]);
+        execute_command("cp /usr/bin/TE/main.c %s/project/source", argv[2]);
     }
     else if(strcmp("build", argv[1]) == 0){
         float percent = 0;
@@ -53,9 +53,8 @@ int main(int argc, char *argv[]){
             }
             else{
                 execute_command("gcc -c -Iproject/include -ITE/include project/source/%s", files[i]);
-                size_t shift = strcspn(files[i], ".c");
-                memset(files[i] + shift + 1, 0, 1);
-                *(files[i] + shift + 1) = 'o';
+                int end = strlen(files[i]) - 1;
+                files[i][end] = 'o';
             }
         }
         
@@ -64,13 +63,15 @@ int main(int argc, char *argv[]){
             strcat(buffer, " ");
             strcat(buffer, files[i]);
         }
+        printf("%s\n", buffer);
+
         execute_command("gcc -o build/debug/game -Iproject/include -ITE/include -LTE/lib %s TE/lib/libTE.a -lSDL2main -lSDL2 -lGLEW -lGLU -lGL -lSOIL -lm", buffer);
 
         for(i = 0; i < size; i++){
             execute_command("rm %s", files[i]);
         }
 
-        execute_command("cp -r project/resources/ build/debug/resources/");
+        execute_command("cp -r project/resources/ build/debug/");
 
         for(i = 0; i < size; i++)
             free(files[i]);
