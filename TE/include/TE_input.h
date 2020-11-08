@@ -27,5 +27,6 @@ int TE_mouse_button_down(int mouse_button);
 int TE_mouse_button_up(int mouse_button);
 
 void TE_get_mouse_position(int *x, int *y);
+void TE_set_mouse_position(int x, int y);
 
 #endif

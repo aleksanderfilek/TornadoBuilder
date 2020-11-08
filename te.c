@@ -52,6 +52,7 @@ int main(int argc, char *argv[]){
 
             }
             else{
+                printf("Compile %s [%d/%d]\n", files[i], i+1, size);
                 execute_command("gcc -c -Iproject/include -ITE/include project/source/%s", files[i]);
                 int end = strlen(files[i]) - 1;
                 files[i][end] = 'o';
@@ -63,7 +64,8 @@ int main(int argc, char *argv[]){
             strcat(buffer, " ");
             strcat(buffer, files[i]);
         }
-        printf("%s\n", buffer);
+
+        printf("Linking\n");
 
         execute_command("gcc -o build/debug/game -Iproject/include -ITE/include -LTE/lib %s TE/lib/libTE.a -lSDL2main -lSDL2 -lGLEW -lGLU -lGL -lSOIL -lm", buffer);
 
@@ -82,7 +84,10 @@ int main(int argc, char *argv[]){
             //execute_command("./build/release/game", 0);
         }
         else{
-            execute_command("./build/debug/game");
+            execute_command("cd build/debug");
+            //system("./game");
+            //execute_command("#!/bin/bash ./game");
+            execute_command("cd ../..");
         }
     }
 

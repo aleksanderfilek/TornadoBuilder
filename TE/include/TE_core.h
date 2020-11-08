@@ -36,7 +36,7 @@ typedef struct TE_Game{
     TE_State *next_state;
 }TE_Game;
 
-int TE_init_game(const char *title, int width, int height);
+int TE_init_game(const char *title, int width, int height, int flags);
 void TE_start_game(TE_State *start_state);
 void TE_close_game();
 
