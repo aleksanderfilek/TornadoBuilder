@@ -4,6 +4,7 @@
 
 #include<string.h>
 #include<dirent.h>
+#include<unistd.h>
 
 #include<sys/types.h>
 
@@ -23,7 +24,6 @@ int main(int argc, char *argv[]){
             printf("New what?\n");
             return 0;
         }
-
         execute_command("mkdir -p %s/build/debug", argv[2]);
 
         execute_command("mkdir -p %s/build/release", argv[2]);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 
         execute_command("mkdir -p %s/project/source", argv[2]);
 
-        execute_command("cp -r /usr/bin/TE/TE %s/",argv[2]);
+        execute_command("cp -r /usr/bin/TE/ %s/",argv[2]);
 
         execute_command("cp /usr/bin/TE/main.c %s/project/source", argv[2]);
     }
@@ -84,10 +84,12 @@ int main(int argc, char *argv[]){
             //execute_command("./build/release/game", 0);
         }
         else{
-            execute_command("cd build/debug");
+            //execute_command("cd build/debug");
+            char *args[] = {NULL};
+            execvp("./build/debug/game", args);
             //system("./game");
             //execute_command("#!/bin/bash ./game");
-            execute_command("cd ../..");
+            //execute_command("cd ../..");
         }
     }
 

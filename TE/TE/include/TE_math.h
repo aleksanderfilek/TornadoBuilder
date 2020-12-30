@@ -3,6 +3,14 @@
 
 #define PI 3.141596f
 
+#define Min(a, b) (a > b)?b:a
+#define Max(a, b) (a > b)?a:b
+
+typedef struct int2
+{
+    int x,y;
+}int2;
+
 typedef struct float2
 {
     float x,y;
